@@ -1,0 +1,38 @@
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+
+# Data & results
+logs/
+data/
+results/
+evals/
+*.pkl
+*.joblib
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+.venv/
+
+# Ignore everything in data and logs by default
+data/*
+logs/*
+
+# But keep the folders themselves and allow specific files
+!data/
+!logs/
+!data/.gitkeep
+!logs/.gitkeep
