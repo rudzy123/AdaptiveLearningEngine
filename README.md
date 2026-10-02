@@ -1,198 +1,152 @@
-# Adaptive Learning Engine (ALE)
+# Adaptive Learning Engine
 
-**Adaptive Learning Engine (ALE)** is a local, production-oriented adaptive tutoring system that uses memory, evaluation, and progression to teach complex subjects. It ingests open PDFs, retrieves grounded context, generates lessons/problems, and adapts sequencing over time. **No external API keys.**
+**Building intelligent systems that adapt to human learning.**
+
+A production-oriented system that moves beyond static tutoring into true adaptive learning. It teaches a
+concept from retrieved sources, grades your answer on five layers, updates a per-concept confidence, and
+decides what you see next: advance, practice harder, repeat, or reteach. It runs entirely on your
+machine, with no external APIs and no keys.
+
+![Evaluation and next step](docs/screenshot-evaluation.png)
+
+## The five claims, and where each one lives in code
+
+| Claim | Implementation |
+| --- | --- |
+| Dynamic adaptive learning loop | `ale/engine/tutor.py` drives lesson, problem, answer, evaluation, progression, memory. The session phase is persisted, so the loop resumes where it stopped. |
+| 5-layer evaluation engine | `ale/engine/evaluation.py`: exact/numeric match, partial credit, reasoning alignment, error typing, confidence delta. All five are returned with every answer. |
+| Confidence-based progression | `ale/engine/progression.py`: a pure function with four actions, driven by confidence and error type (rules below). |
+| Local RAG pipeline (no external APIs) | `ale/engine/ingest.py`, `retrieval.py`, `lesson.py`: chunking, SQLite chunk store, pure-Python BM25, extractive lessons with citations. No network calls anywhere in the engine. |
+| Persistent learner state | `ale/engine/store.py`: SQLite (WAL). Memory, sessions, issued problems, attempts and lesson history survive a restart. |
 
 ## Quick start
 
-```bash
-cd adaptive_learning_engine
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# Knowledge base (one-time)
-python scripts/download_materials.py
-python scripts/ingest_pdfs.py
-python build_curriculum.py
-python tag_chunks.py
-
-# API server (recommended)
-uvicorn app.main:app --reload --port 8000
-# Docs: http://localhost:8000/docs
-
-# Tests
-pytest tests/ -q
-
-# Demo (full loop)
-python scripts/demo.py
-
-# CLI (interactive terminal)
-python app/cli_main.py
-
-# Streamlit panel
-streamlit run app/learning_panel.py
-
-# Next.js UI (optional)
-cd web && npm install && npm run dev
-```
-
-## System architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  Clients: Next.js (web/) · Streamlit · CLI · curl               │
-└────────────────────────────┬────────────────────────────────────┘
-                             │ HTTP JSON
-┌────────────────────────────▼────────────────────────────────────┐
-│  API LAYER          app/api/routes.py  app/api/schemas.py       │
-│                     app/api/envelope.py  (success | error)      │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-┌────────────────────────────▼────────────────────────────────────┐
-│  SERVICE LAYER      app/services/learning_session.py  (orch.)   │
-│                     app/services/rag_service.py               │
-│                     app/services/validation.py                  │
-│                     app/services/observability.py               │
-└──────┬─────────────────────┬──────────────────────┬───────────┘
-       │                     │                      │
-┌──────▼──────┐    ┌─────────▼─────────┐   ┌───────▼──────────────┐
-│ DATA LAYER  │    │ ENGINE            │   │ GENERATION         │
-│ data/       │    │ engine/           │   │ generation/        │
-│ session_    │    │ memory            │   │ evaluation.py      │
-│ repository  │    │ progression       │   │ (5-layer eval)     │
-│ api_logs    │    │ concepts          │   │                    │
-│             │    │ lesson_generator  │   │                    │
-│ data/*.db   │    │ problem_generator │   │                    │
-└─────────────┘    └─────────┬─────────┘   └────────────────────┘
-                             │
-                    ┌────────▼────────┐
-                    │ pipeline/       │
-                    │ retrieval · PDF   │
-                    │ learning_chunks.db│
-                    └───────────────────┘
-```
-
-### Learning loop (data flow)
-
-1. **POST /start_topic** — curriculum loaded → `session_state` row created in SQLite.
-2. **GET /lesson/{user_id}** — RAG retrieves chunks → lesson text + `citations[]`.
-3. **GET /problem/{user_id}** — problem generator → `last_problem` persisted.
-4. **POST /submit_answer** — `generation/evaluation` → `engine/memory` updated → progression signal.
-5. **POST /next_step/{user_id}** — advance concept or repeat/reteach/review.
-6. **GET /progress/{user_id}** — confidence per concept from `user_progress.db`.
-
-### Evaluation logic (`generation/evaluation.py`)
-
-| Layer | Purpose |
-|-------|---------|
-| 1 | Exact / numeric match |
-| 2 | Partial credit |
-| 3 | Reasoning alignment |
-| 4 | Error typing (`conceptual_error`, `calculation_error`, …) |
-| 5 | Confidence delta → memory |
-
-API adds **`learning_signal`**: `{ weak_concept, retry_recommended }`.
-
-### Progression logic (`engine/progression.py`)
-
-| Signal | Action |
-|--------|--------|
-| confidence ≥ 0.8 | **advance** |
-| 0.5 – 0.8 | **practice_harder** (harder problems) |
-| < 0.5 | **repeat** / reteach |
-| conceptual / misinterpretation | **reteach** at beginner |
-| calculation_error | more practice, not full reteach |
-| 3+ consecutive failures | reteach |
-
-`decide_from_evaluation()` bridges evaluation → progression on every answer.
-
-## API design
-
-All successful responses:
-
-```json
-{ "status": "success", "data": { ... } }
-```
-
-Errors (never raw stack traces):
-
-```json
-{ "status": "error", "error": { "message": "description", "code": 400 } }
-```
-
-| Method | Path | Action |
-|--------|------|--------|
-| POST | `/start_topic` | Initialize topic |
-| GET | `/lesson/{user_id}` | Lesson + RAG chunks + citations |
-| GET | `/problem/{user_id}` | One practice problem |
-| POST | `/submit_answer` | Evaluate + update memory |
-| POST | `/next_step/{user_id}` | Progression |
-| GET | `/progress/{user_id}` | Confidence by concept |
-
-Legacy POST aliases: `/get_lesson`, `/get_problem`, `/next_step` (body: `{ "user_id" }`).
-
-## Session state (critical)
-
-**No in-memory session store.** Every request:
-
-1. `SessionRepository.load(user_id)`
-2. Business logic in `LearningSession`
-3. `SessionRepository.save(user_id)`
-
-Table: `data/session_state.db` → `session_state`  
-Columns: `user_id`, `topic`, `current_concept`, `last_problem`, `last_updated` (+ extended fields for recoverability).
-
-## Observability
-
-- **File logs**: `logs/` via `pipeline/logging_setup.py`
-- **SQLite**: `data/logs.db` → `api_logs` (endpoint, user_id, concept, latency_ms, score, error_type)
-
-## Package layout
-
-```
-adaptive_learning_engine/
-├── app/
-│   ├── main.py                 # FastAPI entry (uvicorn app.main:app)
-│   ├── cli_main.py             # Terminal CLI
-│   ├── api/                    # routes, schemas, envelope
-│   └── services/               # learning_session, rag, validation
-├── data/                       # session_repository, api_log_repository
-├── engine/                     # memory, progression, generators
-├── generation/                 # deep evaluation
-├── pipeline/                   # ingest, retrieval, curriculum
-├── tests/                      # pytest: test_api, test_evaluation, test_progression
-├── data/*.db                   # runtime databases
-└── web/                        # Next.js dashboard
-```
-
-## Additional docs
-
-- Architecture: `docs/architecture.md`
-- Design retrospectives: `docs/lessons_learned.md`
-- Public deployment guide: `docs/deployment_guide.md`
-
-Corpus PDFs: `../learning_engine_data/` (outside package).
-
-## Testing
+Declared as Python 3.10+; developed and tested only on 3.14.
 
 ```bash
-pytest tests/ -q
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"          # engine, API, Streamlit UI, PDF reader, test tools
+# lighter installs: pip install -e .  (engine + API)   pip install -e ".[ui]"  (adds the UI)
+
+pytest                           # run the test suite
+python -m ale demo               # the full loop in the terminal, exits 0
+python -m ale ui                 # Streamlit UI at http://localhost:8501
+python -m ale serve              # HTTP API at http://127.0.0.1:8000  (docs at /docs)
 ```
 
-- `test_api.py` — full HTTP loop + envelope + validation
-- `test_evaluation.py` — scoring / error types
-- `test_progression.py` — advance vs reteach rules
+The demo script uses a temporary database unless you pass `--db`. The UI and API store state in
+`data/ale.db` (override with `ALE_DB=/path/to.db`). That path is git-ignored.
 
-## RAG output shape
+What a reviewer should see is spelled out in [docs/demo.md](docs/demo.md).
 
-```json
-{
-  "chunks": [{ "text": "...", "source": "linear_algebra.pdf", "score": 0.87 }],
-  "citations": ["Source: linear_algebra.pdf (Section Eigenvalues)"]
-}
+## How the loop decides
+
+1. **Retrieve.** BM25 over the corpus chunks, with section headings weighted. A relevance floor drops
+   off-topic hits. After a reteach, the lesson prefers sections the learner has not just seen.
+2. **Teach.** An extractive lesson: the retrieved passages in reading order, key points, and numbered
+   citations (`source`, `section`, `chunk_id`, BM25 `score`, `excerpt`). No generative model is involved.
+3. **Evaluate.** Five layers:
+   1. exact / numeric match (tolerant of fractions, negatives, number words, Big-O canonical forms)
+   2. partial credit (how many required parts are right)
+   3. reasoning alignment (concept terms used in the optional explanation)
+   4. error typing: `conceptual_error`, `calculation_error`, `misinterpretation`, `incomplete`, `none`
+   5. confidence delta (EMA: learning rate 0.6 for the first three attempts, then 0.4)
+4. **Progress.** First matching rule wins:
+
+   | Order | Condition | Action |
+   | --- | --- | --- |
+   | 1 | 3+ consecutive failures | `reteach` (easier level) |
+   | 2 | conceptual error or misinterpretation | `reteach` (easier level) |
+   | 3 | calculation error | `repeat` (fresh problem, no reteach) |
+   | 4 | answer failed for any other reason | `repeat` |
+   | 5 | confidence >= 0.8 | `advance` to the next concept |
+   | 6 | 0.5 <= confidence < 0.8 | `practice_harder` |
+   | 7 | confidence < 0.5 | `repeat` |
+
+5. **Remember.** Confidence, the closed problem, the attempt and the next session state are written in one
+   SQLite transaction.
+
+## Architecture
+
+```
+ale/
+  engine/        core, no web or UI imports
+    config.py        thresholds and paths
+    text.py          normalisation, stemming, number parsing
+    curriculum.py    topics, concepts, problem bank (data/curriculum.json)
+    ingest.py        Markdown / text / PDF -> chunks (+ the bundled fixture corpus)
+    retrieval.py     BM25 retriever and citation shape
+    lesson.py        extractive lesson builder
+    problems.py      problem selection (difficulty, then least-issued)
+    evaluation.py    the five evaluation layers
+    progression.py   next-step policy
+    store.py         SQLite persistence
+    tutor.py         the service that ties it together
+  interfaces/    thin adapters over Tutor
+    api.py           FastAPI, {status, data} / {status, error} envelope
+    cli.py           demo, serve, ui, ingest, progress, simulate
+    ui.py            Streamlit app
+  research/
+    simulate.py      simulated learners to check the policy's behaviour
+tests/               pytest suite
 ```
 
-Retrieval is **LRU-cached** per `(topic, concept, weak_concepts)` in `RagService`.
+### HTTP API
+
+One envelope for everything: `{"status": "success", "data": ...}` or
+`{"status": "error", "error": {"message": ..., "code": ...}}`. Validation failures and unexpected exceptions
+return the same envelope, never a stack trace.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/health` | liveness and chunk count |
+| GET | `/api/topics` | topics and concepts |
+| GET | `/api/search?q=&k=` | retrieval with citations |
+| POST | `/api/sessions` | start or resume a topic for a user |
+| GET | `/api/users/{id}/session` | recoverable session state |
+| GET | `/api/users/{id}/lesson` | current lesson with citations |
+| GET | `/api/users/{id}/problem` | current problem (never includes the answer key) |
+| POST | `/api/users/{id}/answers` | evaluate an answer and get the next step |
+| GET | `/api/users/{id}/progress` | confidence per concept |
+
+## Corpus
+
+The repository ships a small, original fixture corpus (`ale/engine/data/corpus/`, 28 sections across 7
+concepts) so everything works offline and the tests are deterministic. To teach from your own material:
+
+```bash
+pip install -e ".[pdf]"
+python -m ale ingest path/to/notes_or_pdfs
+```
+
+Ingested documents are stored in the local SQLite database (git-ignored). PDFs and downloaded corpora are
+not committed. Note that the problem bank and curriculum cover the seven bundled concepts; extra documents
+add retrieval material for those concepts, they do not create new problems.
+
+## Research: simulated learners
+
+`python -m ale simulate` runs four scripted personas through the real loop (mastery, careless, confused,
+struggling) and prints how many steps each needs and which actions fired. It is a behavioural sanity check
+of the policy, not evidence about real learners.
+
+## What this is / is not
+
+**This is** a local adaptive tutor: a working, tested implementation of the loop above, with persistent
+state, running offline on a small fixture corpus.
+
+**This is not** a hosted chatbot, a generative-AI tutor, or a measured production deployment. There are no
+user studies, no learning-outcome metrics, and no claims about scale. Lessons are extracted from the
+corpus, not written by a model. See [NOTES.md](NOTES.md) for the concrete limits.
+
+## Screenshots
+
+Taken from the running UI with the commands in [docs/demo.md](docs/demo.md).
+
+| Lesson with sources | After a restart and refresh |
+| --- | --- |
+| ![Lesson](docs/screenshot-lesson.png) | ![After restart](docs/screenshot-after-restart.png) |
 
 ## License
 
-Course PDFs © respective institutions (MIT OCW, Stanford). Pipeline respects public open licenses.
+MIT. See [LICENSE](LICENSE).

@@ -1,0 +1,432 @@
+{
+  "topics": [
+    {
+      "id": "linear_algebra",
+      "title": "Linear Algebra",
+      "aliases": ["linear algebra", "math", "vectors", "matrices"],
+      "concepts": ["vectors", "dot_product", "matrix_multiplication", "eigenvalues"]
+    },
+    {
+      "id": "algorithms",
+      "title": "Algorithms",
+      "aliases": ["algorithms", "algorithm", "cs", "computer science"],
+      "concepts": ["big_o", "binary_search", "merge_sort"]
+    }
+  ],
+  "concepts": {
+    "vectors": {
+      "title": "Vectors",
+      "objective": "Add and scale vectors componentwise and compute a vector's length.",
+      "query": "vector components scalar multiplication addition length magnitude norm",
+      "problems": [
+        {
+          "id": "vec-1", "difficulty": 1, "kind": "numeric", "ordered": true,
+          "prompt": "Let u = (1, 2) and v = (3, 5). Compute u + v.",
+          "format": "Enter the components separated by commas.",
+          "answer": [4, 7],
+          "reasoning_terms": ["add", "component", "sum", "matching", "each"],
+          "signatures": [
+            {"numbers": [3, 10], "type": "conceptual_error", "note": "multiplied matching components instead of adding them"}
+          ],
+          "hint": "Vector addition is componentwise: add the first components, then the second components.",
+          "explanation": "Add matching components: (1 + 3, 2 + 5) = (4, 7)."
+        },
+        {
+          "id": "vec-1b", "difficulty": 1, "kind": "numeric", "ordered": true,
+          "prompt": "Compute 3 times the vector (2, -1).",
+          "format": "Enter the components separated by commas.",
+          "answer": [6, -3],
+          "reasoning_terms": ["multiply", "scalar", "component", "each", "scale"],
+          "signatures": [
+            {"numbers": [5, 2], "type": "conceptual_error", "note": "added 3 to each component; scalar multiplication multiplies every component"}
+          ],
+          "hint": "A scalar multiplies every component.",
+          "explanation": "3 times (2, -1) = (3 * 2, 3 * -1) = (6, -3)."
+        },
+        {
+          "id": "vec-2", "difficulty": 2, "kind": "numeric", "ordered": true,
+          "prompt": "What is the length (magnitude) of the vector (3, 4)?",
+          "format": "Enter a single number.",
+          "answer": [5],
+          "reasoning_terms": ["square", "root", "sum", "length", "magnitude", "pythagorean"],
+          "signatures": [
+            {"numbers": [7], "type": "conceptual_error", "note": "summed the components; length is the square root of the sum of squares"},
+            {"numbers": [25], "type": "calculation_error", "note": "forgot the final square root (25 is the squared length)"}
+          ],
+          "hint": "Square each component, add the squares, then take the square root.",
+          "explanation": "sqrt(3^2 + 4^2) = sqrt(9 + 16) = sqrt(25) = 5."
+        },
+        {
+          "id": "vec-3", "difficulty": 3, "kind": "numeric", "ordered": true,
+          "prompt": "Let u = (3, -1, 4) and v = (1, 2, -2). Compute 2u - v.",
+          "format": "Enter the three components separated by commas.",
+          "answer": [5, -4, 10],
+          "reasoning_terms": ["double", "scalar", "subtract", "component", "each"],
+          "signatures": [
+            {"numbers": [7, 0, 6], "type": "calculation_error", "note": "added v instead of subtracting it (sign slip)"},
+            {"numbers": [2, -3, 6], "type": "conceptual_error", "note": "computed u - v; the scalar 2 was never applied to u"}
+          ],
+          "hint": "Compute 2u first, then subtract v one component at a time.",
+          "explanation": "2u = (6, -2, 8); 2u - v = (6 - 1, -2 - 2, 8 - (-2)) = (5, -4, 10)."
+        }
+      ]
+    },
+    "dot_product": {
+      "title": "Dot Product",
+      "objective": "Compute dot products and use them to test orthogonality.",
+      "query": "dot product inner product multiply components sum orthogonal perpendicular angle",
+      "problems": [
+        {
+          "id": "dot-1", "difficulty": 1, "kind": "numeric", "ordered": true,
+          "prompt": "Compute the dot product of (1, 2) and (3, 4).",
+          "format": "Enter a single number.",
+          "answer": [11],
+          "reasoning_terms": ["multiply", "component", "add", "sum", "product"],
+          "signatures": [
+            {"numbers": [3, 8], "type": "conceptual_error", "note": "listed the componentwise products without adding them"}
+          ],
+          "hint": "Multiply matching components, then add the products. The result is one number.",
+          "explanation": "1*3 + 2*4 = 3 + 8 = 11."
+        },
+        {
+          "id": "dot-1b", "difficulty": 1, "kind": "numeric", "ordered": true,
+          "prompt": "Compute the dot product of (2, 0) and (5, 7).",
+          "format": "Enter a single number.",
+          "answer": [10],
+          "reasoning_terms": ["multiply", "component", "add", "sum", "product"],
+          "signatures": [
+            {"numbers": [10, 0], "type": "conceptual_error", "note": "listed the componentwise products without adding them"}
+          ],
+          "hint": "Multiply matching components, then add the products.",
+          "explanation": "2*5 + 0*7 = 10 + 0 = 10."
+        },
+        {
+          "id": "dot-2", "difficulty": 2, "kind": "numeric", "ordered": true,
+          "prompt": "Compute the dot product of (2, -1, 3) and (4, 5, 1).",
+          "format": "Enter a single number.",
+          "answer": [6],
+          "reasoning_terms": ["multiply", "component", "negative", "sum", "product"],
+          "signatures": [
+            {"numbers": [16], "type": "calculation_error", "note": "dropped the minus sign on the -1 component"},
+            {"numbers": [8, -5, 3], "type": "conceptual_error", "note": "listed the componentwise products without adding them"}
+          ],
+          "hint": "Watch the sign of the -1 component when you multiply.",
+          "explanation": "2*4 + (-1)*5 + 3*1 = 8 - 5 + 3 = 6."
+        },
+        {
+          "id": "dot-3", "difficulty": 3, "kind": "numeric", "ordered": true,
+          "prompt": "For what value of k are the vectors (1, k) and (4, -2) orthogonal?",
+          "format": "Enter a single number.",
+          "answer": [2],
+          "reasoning_terms": ["dot", "product", "zero", "orthogonal", "equation", "perpendicular"],
+          "signatures": [
+            {"numbers": [0.5], "type": "calculation_error", "note": "solved 4k - 2 = 0; the second components pair as k times -2"},
+            {"numbers": [-2], "type": "conceptual_error", "note": "orthogonal means the dot product is zero; k is not just the other vector's component"}
+          ],
+          "hint": "Orthogonal vectors have dot product zero. Write the dot product and solve for k.",
+          "explanation": "1*4 + k*(-2) = 0, so 4 - 2k = 0 and k = 2."
+        }
+      ]
+    },
+    "matrix_multiplication": {
+      "title": "Matrix Multiplication",
+      "objective": "Know when AB exists, what shape it has, and how each entry is computed.",
+      "query": "matrix multiplication rows columns inner dimensions product entry",
+      "problems": [
+        {
+          "id": "mm-1", "difficulty": 1, "kind": "numeric", "ordered": true,
+          "prompt": "A is a 2 by 3 matrix and B is a 3 by 4 matrix. What are the dimensions of AB? Give rows, then columns.",
+          "format": "Enter two numbers: rows, columns.",
+          "answer": [2, 4],
+          "reasoning_terms": ["inner", "dimension", "match", "outer", "rows", "columns"],
+          "signatures": [
+            {"numbers": [3, 3], "type": "conceptual_error", "note": "reported the inner dimensions; the result keeps the outer dimensions"},
+            {"numbers": [4, 2], "type": "misinterpretation", "note": "gave columns then rows; the question asks rows, then columns"}
+          ],
+          "hint": "The inner dimensions must match and disappear; the outer dimensions give the shape.",
+          "explanation": "(2 by 3) times (3 by 4): inner 3 and 3 match, so AB is 2 by 4."
+        },
+        {
+          "id": "mm-1b", "difficulty": 1, "kind": "text",
+          "prompt": "Can a 2 by 3 matrix be multiplied by another 2 by 3 matrix?",
+          "format": "Answer yes or no, optionally with a reason.",
+          "accepted": ["no", "cannot", "not possible", "impossible", "not defined", "undefined"],
+          "key_points": [],
+          "reasoning_terms": ["inner", "dimension", "match", "columns", "rows"],
+          "signatures": [
+            {"pattern": "\\byes\\b", "type": "conceptual_error", "note": "the inner dimensions (3 and 2) must match", "example": "yes"}
+          ],
+          "hint": "Compare the number of columns of the first matrix to the number of rows of the second.",
+          "explanation": "No. The first matrix has 3 columns but the second has 2 rows; the inner dimensions must match."
+        },
+        {
+          "id": "mm-2", "difficulty": 2, "kind": "numeric", "ordered": true,
+          "prompt": "Let A = [[1, 2], [3, 4]] and B = [[5, 6], [7, 8]]. What is the entry in row 1, column 1 of AB?",
+          "format": "Enter a single number.",
+          "answer": [19],
+          "reasoning_terms": ["row", "column", "dot", "product", "multiply", "sum"],
+          "signatures": [
+            {"numbers": [5], "type": "conceptual_error", "note": "multiplied matching entries instead of taking a row-by-column dot product"},
+            {"numbers": [17], "type": "misinterpretation", "note": "paired row 1 of A with a row of B; use a column of B"}
+          ],
+          "hint": "Take the dot product of row 1 of A with column 1 of B.",
+          "explanation": "Row 1 of A is (1, 2); column 1 of B is (5, 7). 1*5 + 2*7 = 19."
+        },
+        {
+          "id": "mm-3", "difficulty": 3, "kind": "numeric", "ordered": true,
+          "prompt": "Compute AB for A = [[1, 2], [3, 4]] and B = [[5, 6], [7, 8]]. Give the four entries row by row.",
+          "format": "Enter four numbers separated by commas.",
+          "answer": [19, 22, 43, 50],
+          "reasoning_terms": ["row", "column", "dot", "product", "multiply", "sum"],
+          "signatures": [
+            {"numbers": [5, 12, 21, 32], "type": "conceptual_error", "note": "multiplied matching entries (elementwise) instead of row-by-column"},
+            {"numbers": [19, 43, 22, 50], "type": "misinterpretation", "note": "listed the entries column by column; the question asks row by row"}
+          ],
+          "hint": "Each entry is a dot product of a row of A with a column of B.",
+          "explanation": "AB = [[1*5+2*7, 1*6+2*8], [3*5+4*7, 3*6+4*8]] = [[19, 22], [43, 50]]."
+        }
+      ]
+    },
+    "eigenvalues": {
+      "title": "Eigenvalues",
+      "objective": "Recognize eigenvalues and eigenvectors and compute eigenvalues of small matrices.",
+      "query": "eigenvalue eigenvector characteristic equation determinant trace diagonal",
+      "problems": [
+        {
+          "id": "eig-1", "difficulty": 1, "kind": "numeric", "ordered": false,
+          "prompt": "What are the eigenvalues of the diagonal matrix [[2, 0], [0, 3]]?",
+          "format": "List every eigenvalue, separated by commas.",
+          "answer": [2, 3],
+          "reasoning_terms": ["diagonal", "eigenvalue", "entries", "triangular"],
+          "signatures": [
+            {"numbers": [5], "type": "conceptual_error", "note": "added the eigenvalues; each one should be listed separately"},
+            {"numbers": [0, 0], "type": "conceptual_error", "note": "the off-diagonal zeros are not the eigenvalues; the diagonal entries are"}
+          ],
+          "hint": "For a diagonal matrix the eigenvalues are the diagonal entries.",
+          "explanation": "A diagonal matrix has its eigenvalues on the diagonal: 2 and 3."
+        },
+        {
+          "id": "eig-1b", "difficulty": 1, "kind": "text",
+          "prompt": "In one sentence: what does it mean for v to be an eigenvector of A with eigenvalue lambda?",
+          "format": "One sentence.",
+          "accepted": [],
+          "key_points": [
+            ["scalar multiple", "multiple of", "scaled", "stretched", "lambda v", "lambda times", "times v"],
+            ["direction", "parallel", "same line", "nonzero", "non zero", "not zero"]
+          ],
+          "reasoning_terms": ["direction", "scalar", "multiple", "nonzero", "eigenvalue"],
+          "signatures": [
+            {"pattern": "\\b(determinant|trace|diagonal)\\b", "type": "conceptual_error", "note": "mixes up eigenvectors with the trace, determinant or diagonal entries", "example": "v is the diagonal of A with trace and determinant"}
+          ],
+          "hint": "Think about what A does to v: is the result in the same direction?",
+          "explanation": "A v is a scalar multiple of v, A v = lambda v, with v nonzero: A only scales v and keeps its direction."
+        },
+        {
+          "id": "eig-2", "difficulty": 2, "kind": "numeric", "ordered": false,
+          "prompt": "A = [[4, 1], [0, 2]] is upper triangular. What are its eigenvalues?",
+          "format": "List every eigenvalue, separated by commas.",
+          "answer": [4, 2],
+          "reasoning_terms": ["triangular", "diagonal", "entries", "eigenvalue"],
+          "signatures": [
+            {"numbers": [1, 0], "type": "conceptual_error", "note": "the eigenvalues of a triangular matrix are the diagonal entries, not the off-diagonal ones"},
+            {"numbers": [6], "type": "conceptual_error", "note": "gave the trace (the sum of the eigenvalues); list each eigenvalue"}
+          ],
+          "hint": "For a triangular matrix, read the eigenvalues off the diagonal.",
+          "explanation": "A triangular matrix has its eigenvalues on the diagonal: 4 and 2."
+        },
+        {
+          "id": "eig-3", "difficulty": 3, "kind": "numeric", "ordered": false,
+          "prompt": "Find the eigenvalues of A = [[2, 1], [1, 2]].",
+          "format": "List every eigenvalue, separated by commas.",
+          "answer": [1, 3],
+          "reasoning_terms": ["trace", "determinant", "characteristic", "equation", "quadratic", "factor"],
+          "signatures": [
+            {"numbers": [4, 3], "type": "conceptual_error", "note": "used the trace and determinant directly as eigenvalues; they are the sum and product"},
+            {"numbers": [2, 2], "type": "conceptual_error", "note": "diagonal entries are eigenvalues only for triangular matrices"}
+          ],
+          "hint": "The trace is 4 and the determinant is 3. Solve lambda^2 - 4 lambda + 3 = 0.",
+          "explanation": "lambda^2 - 4 lambda + 3 = (lambda - 1)(lambda - 3) = 0, so the eigenvalues are 1 and 3."
+        }
+      ]
+    },
+    "big_o": {
+      "title": "Big-O Notation",
+      "objective": "Read the growth rate of simple loops and expressions and state it in Big-O form.",
+      "query": "big-o notation growth rate complexity loops nested dominant term",
+      "problems": [
+        {
+          "id": "bo-1", "difficulty": 1, "kind": "complexity",
+          "prompt": "What is the Big-O time complexity of summing the elements of a list of n numbers?",
+          "format": "For example: O(n log n).",
+          "answer": ["n"],
+          "reasoning_terms": ["each", "element", "once", "loop", "linear"],
+          "signatures": [
+            {"forms": ["1"], "type": "conceptual_error", "note": "every element has to be read at least once", "example": "O(1)"},
+            {"forms": ["logn"], "type": "conceptual_error", "note": "logarithmic time needs halving; summing must visit each item", "example": "O(log n)"}
+          ],
+          "hint": "How many times is each element touched?",
+          "explanation": "Each of the n elements is read once, so the cost is O(n)."
+        },
+        {
+          "id": "bo-1b", "difficulty": 1, "kind": "complexity",
+          "prompt": "A loop runs n times, and inside it a second loop also runs n times. What is the Big-O time complexity of the whole thing?",
+          "format": "For example: O(n log n).",
+          "answer": ["n2"],
+          "reasoning_terms": ["nested", "multiply", "loop", "times", "inner"],
+          "signatures": [
+            {"forms": ["n"], "type": "conceptual_error", "note": "nested loops multiply their costs; they do not add", "example": "O(n)"}
+          ],
+          "hint": "Nested loops multiply: the inner loop runs fully for every pass of the outer loop.",
+          "explanation": "n passes of the outer loop times n passes of the inner loop is n * n = O(n^2)."
+        },
+        {
+          "id": "bo-2", "difficulty": 2, "kind": "complexity",
+          "prompt": "What is the Big-O complexity of f(n) = 3n^2 + 5n + 20?",
+          "format": "For example: O(n log n).",
+          "answer": ["n2", "3n2"],
+          "reasoning_terms": ["dominant", "drop", "constant", "term", "lower", "order"],
+          "signatures": [
+            {"forms": ["n"], "type": "conceptual_error", "note": "dropped the dominant term; the fastest-growing term decides", "example": "O(n)"},
+            {"forms": ["3n2+5n+20"], "type": "conceptual_error", "note": "Big-O drops constants and lower-order terms", "example": "O(3n^2 + 5n + 20)"}
+          ],
+          "hint": "Keep only the fastest-growing term and drop its constant.",
+          "explanation": "The dominant term is 3n^2; dropping the constant gives O(n^2)."
+        },
+        {
+          "id": "bo-3", "difficulty": 3, "kind": "complexity",
+          "prompt": "A program runs a binary search, which costs log n steps, once for each of n items. What is the total Big-O time complexity?",
+          "format": "For example: O(n log n).",
+          "answer": ["nlogn"],
+          "reasoning_terms": ["multiply", "each", "item", "per", "total"],
+          "signatures": [
+            {"forms": ["n"], "type": "conceptual_error", "note": "ignored the log n cost of each search", "example": "O(n)"},
+            {"forms": ["logn"], "type": "conceptual_error", "note": "the search runs n times, so the costs multiply", "example": "O(log n)"},
+            {"forms": ["n2"], "type": "conceptual_error", "note": "a binary search costs log n, not n", "example": "O(n^2)"}
+          ],
+          "hint": "Per-item cost times number of items.",
+          "explanation": "n items, each costing log n, gives n * log n = O(n log n)."
+        }
+      ]
+    },
+    "binary_search": {
+      "title": "Binary Search",
+      "objective": "Run binary search by hand and explain why it needs sorted data and O(log n) steps.",
+      "query": "binary search sorted halving mid index logarithmic",
+      "problems": [
+        {
+          "id": "bs-1", "difficulty": 1, "kind": "text",
+          "prompt": "Binary search needs the list to be in what condition? Answer in one or two words.",
+          "format": "One or two words.",
+          "accepted": ["sorted", "ordered", "in order", "ascending"],
+          "key_points": [],
+          "reasoning_terms": ["sorted", "order", "halve", "discard"],
+          "signatures": [
+            {"pattern": "\\b(unsorted|not sorted|random|shuffled|any order)\\b", "type": "conceptual_error", "note": "halving is only justified when the list is sorted", "example": "unsorted"}
+          ],
+          "hint": "Why is it safe to throw away half of the list after one comparison?",
+          "explanation": "The list must be sorted; otherwise discarding half of it could throw away the target."
+        },
+        {
+          "id": "bs-1b", "difficulty": 1, "kind": "numeric", "ordered": true,
+          "prompt": "How many times can you halve a list of 16 elements before only one element remains?",
+          "format": "Enter a single number.",
+          "answer": [4],
+          "reasoning_terms": ["halve", "half", "divide", "repeat", "log"],
+          "signatures": [
+            {"numbers": [8], "type": "conceptual_error", "note": "that is one halving; keep halving until one element remains"},
+            {"numbers": [15], "type": "conceptual_error", "note": "that is a linear scan, not repeated halving"}
+          ],
+          "hint": "16, 8, 4, ... keep going until you reach 1.",
+          "explanation": "16 -> 8 -> 4 -> 2 -> 1 is 4 halvings (log base 2 of 16)."
+        },
+        {
+          "id": "bs-2", "difficulty": 2, "kind": "numeric", "ordered": true,
+          "prompt": "Binary search runs on the sorted list [2, 5, 8, 12, 16, 23, 38] looking for 23. With 0-indexed positions, mid = (lo + hi) // 2, lo = 0 and hi = 6, what is the index of the first element compared?",
+          "format": "Enter a single number (an index).",
+          "answer": [3],
+          "reasoning_terms": ["mid", "index", "middle", "lo", "hi"],
+          "signatures": [
+            {"numbers": [12], "type": "misinterpretation", "note": "gave the value stored at index 3; the question asks for the index"},
+            {"numbers": [0], "type": "conceptual_error", "note": "binary search starts in the middle, not at the front"},
+            {"numbers": [6], "type": "conceptual_error", "note": "binary search starts in the middle, not at the end"}
+          ],
+          "hint": "Plug lo = 0 and hi = 6 into the mid formula.",
+          "explanation": "mid = (0 + 6) // 2 = 3, and the value at index 3 is 12."
+        },
+        {
+          "id": "bs-3", "difficulty": 3, "kind": "numeric", "ordered": true,
+          "prompt": "About how many comparisons does binary search need in the worst case on a sorted list of 1000000 elements? Compute log base 2 of the size and round up to a whole number.",
+          "format": "Enter a single whole number.",
+          "answer": [20],
+          "reasoning_terms": ["log", "halve", "power", "round", "comparison"],
+          "signatures": [
+            {"numbers": [19], "type": "calculation_error", "note": "rounded down; 2^19 = 524288 is less than 1000000"},
+            {"numbers": [1000000], "type": "conceptual_error", "note": "that is a linear scan, not binary search"},
+            {"numbers": [500000], "type": "conceptual_error", "note": "that halves only once instead of repeatedly"}
+          ],
+          "hint": "2^10 = 1024, so 2^20 is about a million.",
+          "explanation": "log2(1000000) is about 19.93, which rounds up to 20 comparisons."
+        }
+      ]
+    },
+    "merge_sort": {
+      "title": "Merge Sort",
+      "objective": "Merge sorted lists by hand and explain why merge sort costs O(n log n).",
+      "query": "merge sort divide conquer merge sorted halves levels",
+      "problems": [
+        {
+          "id": "ms-1", "difficulty": 1, "kind": "numeric", "ordered": true,
+          "prompt": "Merge sort splits a list of 8 elements all the way down to single-element pieces. How many single-element pieces are there?",
+          "format": "Enter a single number.",
+          "answer": [8],
+          "reasoning_terms": ["split", "single", "element", "piece", "half"],
+          "signatures": [
+            {"numbers": [3], "type": "misinterpretation", "note": "gave the number of levels, not the number of pieces"},
+            {"numbers": [4], "type": "conceptual_error", "note": "pairs still contain two elements; keep splitting down to single elements"}
+          ],
+          "hint": "Every element ends up alone.",
+          "explanation": "Each of the 8 elements ends up in its own piece, so there are 8 pieces (over 3 levels of splitting)."
+        },
+        {
+          "id": "ms-1b", "difficulty": 1, "kind": "numeric", "ordered": true,
+          "prompt": "Merge the sorted lists [1, 4, 6] and [2, 3, 7] into one sorted list.",
+          "format": "Enter the merged list separated by commas.",
+          "answer": [1, 2, 3, 4, 6, 7],
+          "reasoning_terms": ["compare", "front", "smaller", "merge", "pointer"],
+          "signatures": [
+            {"numbers": [1, 4, 6, 2, 3, 7], "type": "conceptual_error", "note": "concatenated the lists instead of merging by comparing fronts"}
+          ],
+          "hint": "Repeatedly take the smaller of the two front elements.",
+          "explanation": "Compare fronts: 1, then 2, then 3, then 4, then 6, then 7 gives [1, 2, 3, 4, 6, 7]."
+        },
+        {
+          "id": "ms-2", "difficulty": 2, "kind": "complexity",
+          "prompt": "What is the worst-case Big-O time complexity of merge sort?",
+          "format": "For example: O(n log n).",
+          "answer": ["nlogn"],
+          "reasoning_terms": ["level", "log", "merge", "halve", "each"],
+          "signatures": [
+            {"forms": ["n2"], "type": "conceptual_error", "note": "quadratic is the worst case for simple sorts, not for merge sort", "example": "O(n^2)"},
+            {"forms": ["n"], "type": "conceptual_error", "note": "there are log n levels of merging, each doing O(n) work", "example": "O(n)"},
+            {"forms": ["logn"], "type": "conceptual_error", "note": "every element must be handled at every level", "example": "O(log n)"}
+          ],
+          "hint": "How many levels of merging are there, and how much work does each level do?",
+          "explanation": "log n levels of merging, each doing O(n) work: O(n log n)."
+        },
+        {
+          "id": "ms-3", "difficulty": 3, "kind": "numeric", "ordered": true,
+          "prompt": "Merge sort on 8 elements has 3 levels of merging, and each level does 8 units of work. How many units of work in total?",
+          "format": "Enter a single number.",
+          "answer": [24],
+          "reasoning_terms": ["multiply", "level", "each", "total", "work"],
+          "signatures": [
+            {"numbers": [11], "type": "conceptual_error", "note": "added the levels to the work per level; the costs multiply"},
+            {"numbers": [64], "type": "conceptual_error", "note": "squared n instead of multiplying n by the number of levels"}
+          ],
+          "hint": "Work per level times number of levels.",
+          "explanation": "3 levels * 8 units per level = 24 units of work."
+        }
+      ]
+    }
+  }
+}

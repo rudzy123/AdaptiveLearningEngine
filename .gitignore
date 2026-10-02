@@ -1,38 +1,40 @@
-# Virtual environments
+# Environments
 .venv/
 venv/
 env/
-ENV/
 
 # Python
 __pycache__/
 *.py[cod]
-*.so
-*.pyd
+*.egg-info/
+build/
+dist/
+.pytest_cache/
 
-# Data & results
-logs/
-data/
-results/
-evals/
-*.pkl
-*.joblib
+# Node (no frontend ships in this repo; kept out defensively)
+node_modules/
 
-# OS
+# Runtime state: learner databases and logs
+/data/
+/logs/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.log
+
+# Downloaded / user-supplied corpora (never commit PDFs)
+/corpus/
+/corpora/
+*.pdf
+
+# Local config / secrets (the project needs none, but never commit them)
+.env
+.env.*
+
+# OS / editor
 .DS_Store
 Thumbs.db
-
-# IDE
 .vscode/
 .idea/
-.venv/
-
-# Ignore everything in data and logs by default
-data/*
-logs/*
-
-# But keep the folders themselves and allow specific files
-!data/
-!logs/
-!data/.gitkeep
-!logs/.gitkeep

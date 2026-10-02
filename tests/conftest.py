@@ -1,29 +1,28 @@
-"""Pytest fixtures."""
-
-from __future__ import annotations
-
-import sys
-from pathlib import Path
-
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+from ale.engine import Tutor
+from ale.engine.curriculum import load_curriculum
 
 
-@pytest.fixture
-def tmp_session_db(tmp_path, monkeypatch):
-    """Isolated session + log DBs per test."""
-    session_db = tmp_path / "session_state.db"
-    log_db = tmp_path / "logs.db"
-    progress_db = tmp_path / "user_progress.db"
+@pytest.fixture()
+def db_path(tmp_path):
+    return tmp_path / "ale.db"
 
-    monkeypatch.setattr("config.SESSION_STATE_DB_PATH", session_db)
-    monkeypatch.setattr("config.API_LOGS_DB_PATH", log_db)
-    monkeypatch.setattr("config.USER_PROGRESS_DB_PATH", progress_db)
 
-    from data.session_repository import SessionRepository
-    from app.services.learning_session import LearningSession
+@pytest.fixture()
+def tutor(db_path):
+    return Tutor(db_path)
 
-    return LearningSession(sessions=SessionRepository(session_db))
+
+@pytest.fixture(scope="session")
+def curriculum():
+    return load_curriculum()
+
+
+@pytest.fixture()
+def client(db_path):
+    from fastapi.testclient import TestClient
+
+    from ale.interfaces.api import create_app
+
+    return TestClient(create_app(db_path), raise_server_exceptions=False)
